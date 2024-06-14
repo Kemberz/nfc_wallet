@@ -3,6 +3,7 @@ allprojects {
         google()
         mavenCentral()
     }
+    ext.kotlin_version = '1.9.0'
 }
 
 rootProject.buildDir = "../build"
