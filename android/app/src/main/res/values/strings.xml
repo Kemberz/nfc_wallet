@@ -1,0 +1,4 @@
+<resources>
+    <!-- Other string resources -->
+    <string name="service_name">Your Service Name</string>
+</resources>

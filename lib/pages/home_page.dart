@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nfc_wallet/util/nfc_scanner.dart';
 import 'package:nfc_wallet/util/tag_model.dart';
 import 'package:nfc_wallet/util/import_export.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,8 +18,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const HomePage(),
+    return const MaterialApp(
+      home: HomePage(),
     );
   }
 }
@@ -31,8 +32,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const platform = MethodChannel('com.example.nfcwallet/nfc');
   final List<Tag> _scannedTags = [];
   final ImagePicker _picker = ImagePicker();
+  String testTitleText = '';
 
   @override
   void initState() {
@@ -176,9 +179,49 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _replicateNfc(Tag tag) {
-    // Implement NFC replication functionality here
-    print('Replicating NFC for tag: ${tag.id}');
+  void showErrorDialog(BuildContext context, String message, [dynamic error, StackTrace? stackTrace]) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(message),
+                if (error != null) ...[
+                  SizedBox(height: 8.0),
+                  Text('Error: $error'),
+                ],
+                if (stackTrace != null) ...[
+                  SizedBox(height: 8.0),
+                  Text('Stack Trace: $stackTrace'),
+                ],
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void _replicateNfc(Tag tag) async {
+    try {
+      await platform.invokeMethod('replicateNfc', {"tagId": tag.id});
+      //debug popup
+      showErrorDialog(context, "invokeMethod worked");
+    } on PlatformException catch (e) {
+      print("Failed to replicate NFC: '${e.message}'.");
+    }
   }
 
   void _showImportExportDialog() async {
@@ -239,6 +282,8 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
